@@ -5,15 +5,12 @@ from typing import Literal, List, Dict, Any
 from geometric_asian_option import geometric_asian_option_price
 from american_option import american_option_pricing
 from geometric_basket_asian_option import geometric_basket_asian_option_price
-# from langchain.tools import Tool
-# from langchain.chat_models import ChatOpenAI
-# from langchain.agents import initialize_agent, AgentType
-# from langchain.memory import ConversationBufferMemory
 import os
 from dotenv import load_dotenv
 from monte_carlo_asian_option import AsianOptionPricer
 from monte_carlo_basket import BasketOptionPricer
 from quasi_kiko_option import KIKOOptionPricerQMC
+from implied_vol import implied_volatility, call, put
 
 load_dotenv()
 
@@ -87,6 +84,24 @@ class KIKOOptionRequest(BaseModel):
     N: int
     option_type: Literal['call', 'put']
     use_control_variate: bool
+
+class ImpliedVolatilityRequest(BaseModel):
+    S: float
+    K: float
+    T: float
+    t: float
+    r: float
+    q: float
+    Ctrue: float
+    OptionType: Literal['C', 'P']
+
+class BlackScholesRequest(BaseModel):
+    S: float
+    K: float
+    T: float
+    r: float
+    q: float
+    OptionType: Literal['C', 'P']
 
 # Option pricing endpoints
 @app.get("/price/geometric-asian")
@@ -162,7 +177,27 @@ def price_quasi_kiko(request: KIKOOptionRequest):
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
 
-
+@app.get("/implied-volatility")
+def implied_volatility_endpoint(request: ImpliedVolatilityRequest):
+    try:
+        result = implied_volatility(
+            S=request.S, K=request.K, T=request.T, t=request.t, r=request.r, q=request.q,
+            Ctrue=request.Ctrue, OptionType=request.OptionType
+        )
+        return {"implied_volatility": result}
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    
+@app.get("/price/black-scholes")
+def price_black_scholes(request: BlackScholesRequest):
+    try:
+        if request.OptionType == 'C':
+            price = call(request.S, request.K, request.T, request.t, request.r, request.q)
+        else:
+            price = put(request.S, request.K, request.T, request.t, request.r, request.q)
+        return {"price": float(price)}
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
 
 # Initialize LangChain tools and agent
 # def init_agent():

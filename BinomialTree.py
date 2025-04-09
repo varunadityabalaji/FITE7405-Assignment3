@@ -14,7 +14,10 @@ def american_option_pricing(S0, K, r, T, sigma, N, option_type):
         option_type (str): The type of option ('call' or 'put').
 
     Returns:
-        float: The price of the American option.
+        tuple: (option_price, stock_prices, option_prices)
+            - option_price: The price of the American option
+            - stock_prices: The binomial tree of stock prices
+            - option_prices: The binomial tree of option prices
     """
 
     # Calculate the up and down factors
@@ -28,33 +31,38 @@ def american_option_pricing(S0, K, r, T, sigma, N, option_type):
     # Initialize the stock price tree
     stock_prices = np.zeros((N + 1, N + 1))
     stock_prices[0, 0] = S0
+    
     for i in range(1, N + 1):
-        for j in range(i + 1):
-            stock_prices[i, j] = stock_prices[i - 1, j] * u
-            stock_prices[i, j + 1] = stock_prices[i - 1, j] * d
+        stock_prices[i, 0] = stock_prices[i - 1, 0] * u
+        for j in range(1, i + 1):
+            stock_prices[i, j] = stock_prices[i - 1, j - 1] * d
 
     # Initialize the option price tree
     option_prices = np.zeros((N + 1, N + 1))
-    for i in range(N + 1):
+    
+    # Calculate terminal option values
+    for j in range(N + 1):
         if option_type == 'call':
-            option_prices[N, i] = max(0, stock_prices[N, i] - K)
-        elif option_type == 'put':
-            option_prices[N, i] = max(0, K - stock_prices[N, i])
+            option_prices[N, j] = max(0, stock_prices[N, j] - K)
+        else:  # put option
+            option_prices[N, j] = max(0, K - stock_prices[N, j])
 
     # Work backwards through the tree
     for i in range(N - 1, -1, -1):
         for j in range(i + 1):
-            # Calculate the discounted expected value of the option at the next time step
+            # Calculate the discounted expected value
             discounted_expected_value = np.exp(-r * dt) * (p * option_prices[i + 1, j] + (1 - p) * option_prices[i + 1, j + 1])
-
-            # Calculate the intrinsic value of the option
+            
+            # Calculate the intrinsic value
             if option_type == 'call':
                 intrinsic_value = max(0, stock_prices[i, j] - K)
-            else:
+            else:  # put option
                 intrinsic_value = max(0, K - stock_prices[i, j])
-
-            # Take the maximum of the discounted expected value and the intrinsic value
+            
+            # Take the maximum of the discounted expected value and intrinsic value
             option_prices[i, j] = max(discounted_expected_value, intrinsic_value)
 
-    # Return the price of the option
-    return option_prices[0, 0]
+    return option_prices[0, 0], stock_prices, option_prices
+
+
+print(american_option_pricing(50, 40, 0.1, 2, 0.4, 200, 'put'))

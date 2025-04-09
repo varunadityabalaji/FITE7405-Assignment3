@@ -707,6 +707,12 @@ app.layout = dbc.Container([
                     html.Div(id='bt-price', className="h4 text-success")
                 ], className="text-center")
                 ]),
+                html.Hr(),
+                dbc.Row([
+                dbc.Col([
+                    dcc.Graph(id='bt-tree-plot')
+                ], width=12)
+                ]),
                 html.Hr(style={"borderTop": "2px solid #dee2e6"}),  # Add a horizontal divider
                 html.Div([
                 html.P(
@@ -1037,7 +1043,10 @@ def calculate_bt(n_clicks, spot, vol, rate, time, strike, steps, option_type):
         return ""
     
     try:
-        price = american_option_pricing(
+        # Log input values
+        print(f"Inputs - Spot: {spot}, Vol: {vol}, Rate: {rate}, Time: {time}, Strike: {strike}, Steps: {steps}, Type: {option_type}")
+        
+        price, _, _ = american_option_pricing(
             S0=spot,
             K=strike,
             r=rate,
@@ -1046,10 +1055,15 @@ def calculate_bt(n_clicks, spot, vol, rate, time, strike, steps, option_type):
             N=steps,
             option_type=option_type
         )
+        
+        # Log output values
+        print(f"Calculated Price: {price}")
+        
+        return f"${price:.2f}"
+        
     except Exception as e:
+        print(f"Error: {str(e)}")
         return f"Error: {str(e)}"
-    
-    return f"${price:.2f}"
 
 # News Callback
 @callback(

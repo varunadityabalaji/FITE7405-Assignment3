@@ -1,3 +1,8 @@
+"""
+Author: Varun Balaji
+SID: 3036383355
+"""
+
 import numpy as np
 from scipy.stats import norm, qmc
 from typing import List, Dict, Union

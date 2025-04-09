@@ -1,11 +1,32 @@
+"""
+Author: Sai Navyanth
+SID: 
+"""
+
 import numpy as np
 from scipy.stats import norm
 
-print("Geometric Basket Asian Option Price: ")
-def geometric_basket_asian_option_price(S1_0, S2_0, sigma1, sigma2, r, T, K, rho, type):
+
+def geometric_basket_option_price(S1_0, S2_0, sigma1, sigma2, r, T, K, rho, type):
     """
     Calculates the price of a geometric basket Asian option using the closed-form solution.
+
+    Parameters:
+    S1_0 (float): Initial price of the first underlying asset.
+    S2_0 (float): Initial price of the second underlying asset.
+    sigma1 (float): Volatility of the first underlying asset.
+    sigma2 (float): Volatility of the second underlying asset.
+    r (float): Risk-free interest rate.
+    T (float): Time to maturity (in years).
+    K (float): Strike price of the option.
+    rho (float): Correlation coefficient between the two assets.
+    type (str): Type of the option ('call' or 'put').
+
+    Returns:
+    float: Price of the geometric basket Asian option.
     """
+
+
     # Calculate the average volatility
     sigma_avg = np.sqrt(sigma1**2 + sigma2**2 + 2*(sigma1*sigma2)*rho)/2
 
@@ -32,5 +53,5 @@ def geometric_basket_asian_option_price(S1_0, S2_0, sigma1, sigma2, r, T, K, rho
 
     return price
 
-print(geometric_basket_asian_option_price(100, 100, 0.2, 0.2, 0.05, 1, 100, 0.5, 'call'))
+
 

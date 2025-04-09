@@ -1,3 +1,8 @@
+"""
+Author: Varun Balaji
+SID: 3036383355
+"""
+
 import numpy as np
 from scipy.stats import norm
 from typing import Literal, Tuple, Dict, List

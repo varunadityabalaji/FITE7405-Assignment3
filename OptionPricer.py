@@ -1,14 +1,21 @@
+"""
+Author: Varun Balaji
+SID: 3036383355
+"""
+
 import dash
 from dash import dcc, html, Input, Output, State, callback
 import dash_bootstrap_components as dbc
+from BlackScholes import BlackScholes
+from GeometricAsian import geometric_asian_option_price
+from GeometricBasket import geometric_basket_option_price
 import plotly.graph_objects as go
-import requests
+
 
 
 # Initialize the app
 app = dash.Dash(__name__, external_stylesheets=[dbc.themes.LUX])
 app.title = "Option Pricer"
-
 
 
 # App layout
@@ -96,84 +103,87 @@ app.layout = dbc.Container([
         dbc.Tab([
             dbc.Card([
             dbc.CardBody([
-                html.H4("Implied Volatility Calculator", className="card-title"),
-                dbc.Row([
+            html.H4("Implied Volatility Calculator", className="card-title"),
+            dbc.Row([
                 dbc.Col([
-                    dbc.Label("Spot Price (S)"),
-                    dbc.Input(id='iv-spot', type='number', value=100),
+                dbc.Label("Spot Price (S)"),
+                dbc.Input(id='iv-spot', type='number', value=100),
                 ], md=3),
                 dbc.Col([
-                    dbc.Label("Initial Volatility Guess (σ)"),
-                    dbc.Input(id='iv-vol', type='number', value=0.2),
+                dbc.Label("Risk-Free Rate (r)"),
+                dbc.Input(id='iv-rate', type='number', value=0.05),
                 ], md=3),
                 dbc.Col([
-                    dbc.Label("Risk-Free Rate (r)"),
-                    dbc.Input(id='iv-rate', type='number', value=0.05),
+                dbc.Label("Repo Rate (q)"),
+                dbc.Input(id='iv-repo', type='number', value=0.01),
                 ], md=3),
                 dbc.Col([
-                    dbc.Label("Repo Rate (q)"),
-                    dbc.Input(id='iv-repo', type='number', value=0.01),
+                dbc.Label("Time to Maturity (T)"),
+                dbc.Input(id='iv-time', type='number', value=1),
                 ], md=3),
-                ], className="mb-3"),
-                dbc.Row([
+            ], className="mb-3"),
+            dbc.Row([
                 dbc.Col([
-                    dbc.Label("Time to Maturity (T)"),
-                    dbc.Input(id='iv-time', type='number', value=1),
-                ], md=3),
-                dbc.Col([
-                    dbc.Label("Strike Price (K)"),
-                    dbc.Input(id='iv-strike', type='number', value=100),
+                dbc.Label("Strike Price (K)"),
+                dbc.Input(id='iv-strike', type='number', value=100),
                 ], md=3),
                 dbc.Col([
-                    dbc.Label("Option Premium"),
-                    dbc.Input(id='iv-premium', type='number', value=10),
+                dbc.Label("Option Premium"),
+                dbc.Input(id='iv-premium', type='number', value=10),
                 ], md=3),
                 dbc.Col([
-                    dbc.Label("Option Type"),
-                    dcc.Dropdown(
+                dbc.Label("Option Type"),
+                dcc.Dropdown(
                     id='iv-type',
                     options=[{'label': 'Call', 'value': 'call'}, {'label': 'Put', 'value': 'put'}],
-                    value='call'
-                    ),
+                    value='call',
+                    style={"width": "100%"}  # Ensure dropdown matches the size of other inputs
+                ),
                 ], md=3),
-                ]),
-                dbc.Row([
                 dbc.Col([
-                    dbc.Button("Calculate", id='iv-calculate', color="primary", className="mt-3"),
-                ], md=12)
-                ]),
-                html.Hr(),
-                dbc.Row([
+                dbc.Button("Calculate", id='iv-calculate', color="primary", className="mt-4"),
+                ], md=3),
+            ]),
+            html.Hr(),
+            dbc.Row([
                 dbc.Col([
-                    html.H5("Implied Volatility:"),
-                    html.Div(id='iv-result', className="h4 text-success")
+                html.H5("Implied Volatility:"),
+                html.Div(id='iv-result', className="h4 text-success")
                 ], className="text-center")
-                ]),
-                html.Hr(style={"borderTop": "2px solid #dee2e6"}),  # Add a horizontal divider
-                html.Div([
+            ]),
+            html.Hr(style={"borderTop": "2px solid #dee2e6"}),  # Add a horizontal divider
+            html.Div([
                 html.P(
-                    "Implied volatility is the volatility value that, when input into an option pricing model, "
-                    "yields the observed market price of the option. It is often calculated using numerical methods.",
-                    className="mt-3"
+                "Implied volatility is the volatility value that, when input into an option pricing model, "
+                "yields the observed market price of the option. It is often calculated using numerical methods.",
+                className="mt-3"
                 ),
                 html.P(
-                    "In this calculator, we use the Newton-Raphson method to iteratively solve for the implied volatility. "
-                    "The formula for updating the volatility estimate is:",
-                    className="mt-3"
+                "In this calculator, we use the Newton-Raphson method to iteratively solve for the implied volatility. "
+                "The formula for updating the volatility estimate is:",
+                className="mt-3"
                 ),
                 html.Div([
-                    html.Span("σₙ₊₁ = σₙ - f(σₙ) / f'(σₙ)", style={"fontWeight": "bold", "fontSize": "1.2em"})
+                html.Span("σₙ₊₁ = σₙ - f(σₙ) / f'(σₙ)", style={"fontWeight": "bold", "fontSize": "1.2em"})
                 ], className="text-center mt-2"),
                 html.P(
-                    "Here, f(σ) is the difference between the market price and the model price of the option, "
-                    "and f'(σ) is the derivative of f(σ) with respect to σ.",
-                    className="mt-3"
+                "Here, f(σ) is the difference between the market price and the model price of the option, "
+                "and f'(σ) is the derivative of f(σ) with respect to σ.",
+                className="mt-3"
+                ),
+                html.Div([
+                html.Span("f(σ) = C(σ) - Actual Value", style={"fontWeight": "bold", "fontSize": "1.2em"}),
+                ], className="text-center mt-2"),
+                html.P(
+                "In this context, f'(σ) is also known as vega, which measures the sensitivity of the option price "
+                "to changes in volatility.",
+                className="mt-3"
                 ),
                 html.P(
-                    "This method converges quickly for well-behaved functions, making it suitable for implied volatility calculations.",
-                    className="mt-3"
+                "This method converges quickly for well-behaved functions, making it suitable for implied volatility calculations.",
+                className="mt-3"
                 )
-                ], style={"marginTop": "40px"})
+            ], style={"marginTop": "40px"})
             ])
             ], className="mt-4")
         ], label="Implied Volatility"),
@@ -806,10 +816,23 @@ def calculate_bs(n_clicks, spot, vol, rate, repo, time, strike, option_type):
     if n_clicks is None:
         return ""
     
-    # Here you would call your backend API
-    # For now, just return a placeholder
-    price = 10.45  # Replace with actual API call
-    
+    try:
+        bs_model = BlackScholes(
+            S=spot,
+            K=strike,
+            T=time,
+            t=0,
+            r=rate,
+            q=repo
+        )
+
+        if option_type == 'call':
+            price = bs_model.call(sigma=vol)
+        elif option_type == 'put':
+            price =  bs_model.put(sigma=vol)
+    except Exception as e:
+        return f"Error: {str(e)}"
+
     return f"${price:.2f}"
 
 # Implied Volatility Callback
@@ -817,7 +840,6 @@ def calculate_bs(n_clicks, spot, vol, rate, repo, time, strike, option_type):
     Output('iv-result', 'children'),
     Input('iv-calculate', 'n_clicks'),
     [State('iv-spot', 'value'),
-     State('iv-vol', 'value'),
      State('iv-rate', 'value'),
      State('iv-repo', 'value'),
      State('iv-time', 'value'),
@@ -825,13 +847,27 @@ def calculate_bs(n_clicks, spot, vol, rate, repo, time, strike, option_type):
      State('iv-premium', 'value'),
      State('iv-type', 'value')]
 )
-def calculate_iv(n_clicks, spot, vol, rate, repo, time, strike, premium, option_type):
+def calculate_iv(n_clicks, spot, rate, repo, time, strike, premium, option_type):
     if n_clicks is None:
         return ""
     
-    # Here you would call your backend API
-    # For now, just return a placeholder
-    iv = 0.25  # Replace with actual API call
+    try:
+        bs_model = BlackScholes(
+            S=spot,
+            K=strike,
+            T=time,
+            t=0,
+            r=rate,
+            q=repo
+        )
+
+        if option_type == 'call':
+            iv = bs_model.implied_volatility(Ctrue=premium, OptionType='C')
+        elif option_type == 'put':
+            iv = bs_model.implied_volatility(Ctrue=premium, OptionType='P')
+    except Exception as e:
+        return f"Error: {str(e)}"
+    
     
     return f"{iv*100:.2f}%"
 
@@ -851,9 +887,18 @@ def calculate_geo(n_clicks, spot, vol, rate, time, strike, obs, option_type):
     if n_clicks is None:
         return ""
     
-    # Here you would call your backend API
-    # For now, just return a placeholder
-    price = 8.75  # Replace with actual API call
+    try:
+        price = geometric_asian_option_price(
+            S0=spot,
+            sigma=vol,
+            r=rate,
+            T=time,
+            K=strike,
+            n=obs,
+            option_type=option_type
+        )
+    except Exception as e:
+        return f"Error: {str(e)}"
     
     return f"${price:.2f}"
 
@@ -875,9 +920,20 @@ def calculate_basket(n_clicks, s1, s2, vol1, vol2, rate, time, strike, correlati
     if n_clicks is None:
         return ""
     
-    # Here you would call your backend API
-    # For now, just return a placeholder
-    price = 12.30  # Replace with actual API call
+    try:
+        price = geometric_basket_option_price(
+            S1_0=s1,
+            S2_0=s2,
+            sigma1=vol1,
+            sigma2=vol2,
+            r=rate,
+            T=time,
+            K=strike,
+            rho=correlation,
+            type=option_type
+        )
+    except Exception as e:
+        return f"Error: {str(e)}"
     
     return f"${price:.2f}"
 

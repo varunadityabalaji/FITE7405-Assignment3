@@ -36,18 +36,18 @@ def geometric_basket_option_price(S1_0, S2_0, sigma1, sigma2, r, T, K, rho, type
     # Calculate the geometric average of the initial prices
     B = np.sqrt(S1_0 * S2_0)
 
-  # calculate the upper updated interest rate term  
-    u_b = r - 0.25*(sigma1**2 + sigma2**2) + 0.5*sigma_avg**2
+  # calculate the average drift
+    mew = r - 0.25*(sigma1**2 + sigma2**2) + 0.5*sigma_avg**2
 
     # Calculate the d1 and d2 terms
-    d1 = (np.log(B / K) + (u_b + 0.5 * sigma_avg**2) * T) / (sigma_avg * np.sqrt(T))
+    d1 = (np.log(B / K) + (mew + 0.5 * sigma_avg**2) * T) / (sigma_avg * np.sqrt(T))
     d2 = d1 - sigma_avg * np.sqrt(T)
 
     # Calculate the option price based on the type
     if type == 'call':
-        price = df * (B * np.exp(u_b * T) * norm.cdf(d1) - K * norm.cdf(d2))
+        price = df * (B * np.exp(mew * T) * norm.cdf(d1) - K * norm.cdf(d2))
     elif type == 'put':
-        price = df * (K * norm.cdf(-d2) - B * np.exp(u_b * T) * norm.cdf(-d1))
+        price = df * (K * norm.cdf(-d2) - B * np.exp(mew * T) * norm.cdf(-d1))
     else:
         raise ValueError('Invalid option type')
 

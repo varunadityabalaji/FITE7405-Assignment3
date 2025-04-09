@@ -9,6 +9,7 @@ import dash_bootstrap_components as dbc
 from BlackScholes import BlackScholes
 from GeometricAsian import geometric_asian_option_price
 from GeometricBasket import geometric_basket_option_price
+from BinomialTree import american_option_pricing
 import plotly.graph_objects as go
 
 
@@ -1035,9 +1036,18 @@ def calculate_bt(n_clicks, spot, vol, rate, time, strike, steps, option_type):
     if n_clicks is None:
         return ""
     
-    # Here you would call your backend API
-    # For now, just return a placeholder
-    price = 7.25  # Replace with actual API call
+    try:
+        price = american_option_pricing(
+            S0=spot,
+            K=strike,
+            r=rate,
+            T=time,
+            sigma=vol,
+            N=steps,
+            option_type=option_type
+        )
+    except Exception as e:
+        return f"Error: {str(e)}"
     
     return f"${price:.2f}"
 

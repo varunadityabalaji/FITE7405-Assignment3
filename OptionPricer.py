@@ -10,6 +10,10 @@ from BlackScholes import BlackScholes
 from GeometricAsian import geometric_asian_option_price
 from GeometricBasket import geometric_basket_option_price
 from BinomialTree import american_option_pricing
+from MonteCarloAsian import AsianOptionPricer
+from QuasiKiko import KIKOOptionPricerQMC
+from MonteCarloBasket import BasketOptionPricer
+import yfinance as yf
 import plotly.graph_objects as go
 
 
@@ -29,7 +33,8 @@ app.layout = dbc.Container([
     # Tabs
     dbc.Tabs([
         # Tab 1: Black-Scholes Pricer
-        dbc.Tab([
+        dbc.Tab(
+            [
             dbc.Card([
             dbc.CardBody([
             html.H4("Black-Scholes Option Pricing", className="card-title"),
@@ -96,9 +101,10 @@ app.layout = dbc.Container([
             ], className="text-center mt-2"),
             html.P("where d₁ and d₂ are intermediate calculations.", className="mt-3")
             ], style={"marginTop": "40px"})
-            ])
-            ], className="mt-4")
-        ], label="Black-Scholes"),
+                    ])
+                ])
+            ], className="mt-4", label="Black-Scholes"
+        ),
         
         # Tab 2: Implied Volatility Calculator
         dbc.Tab([
@@ -564,62 +570,66 @@ app.layout = dbc.Container([
         dbc.Tab([
             dbc.Card([
             dbc.CardBody([
-                html.H4("Quasi Monte Carlo KIKO Option", className="card-title"),
-                dbc.Row([
-                dbc.Col([
-                    dbc.Label("Spot Price (S)"),
-                    dbc.Input(id='kiko-spot', type='number', value=100),
-                ], md=3),
-                dbc.Col([
-                    dbc.Label("Volatility (σ)"),
-                    dbc.Input(id='kiko-vol', type='number', value=0.2),
-                ], md=3),
-                dbc.Col([
-                    dbc.Label("Risk-Free Rate (r)"),
-                    dbc.Input(id='kiko-rate', type='number', value=0.05),
-                ], md=3),
-                dbc.Col([
-                    dbc.Label("Time to Maturity (T)"),
-                    dbc.Input(id='kiko-time', type='number', value=1),
-                ], md=3),
-                ], className="mb-3"),
-                dbc.Row([
-                dbc.Col([
-                    dbc.Label("Strike Price (K)"),
-                    dbc.Input(id='kiko-strike', type='number', value=100),
-                ], md=3),
-                dbc.Col([
-                    dbc.Label("Lower Barrier (L)"),
-                    dbc.Input(id='kiko-lower', type='number', value=90),
-                ], md=3),
-                dbc.Col([
-                    dbc.Label("Upper Barrier (U)"),
-                    dbc.Input(id='kiko-upper', type='number', value=110),
-                ], md=3),
-                dbc.Col([
-                    dbc.Label("Number of Observations (n)"),
-                    dbc.Input(id='kiko-obs', type='number', value=252),
-                ], md=3),
-                ]),
-                dbc.Row([
-                dbc.Col([
-                    dbc.Label("Cash Rebate (R)"),
-                    dbc.Input(id='kiko-rebate', type='number', value=0),
-                ], md=3),
-                dbc.Col([
-                    dbc.Button("Calculate", id='kiko-calculate', color="primary", className="mt-4"),
-                ], md=3),
-                ]),
-                html.Hr(),
-                dbc.Row([
-                dbc.Col([
-                    html.H5("Option Price:"),
-                    html.Div(id='kiko-price', className="h4 text-success mb-3"),
-                    html.H5("Option Delta:"),
-                    html.Div(id='kiko-delta', className="h4 text-info")
-                ], className="text-center")
-                ]),
-                html.Hr(style={"borderTop": "2px solid #dee2e6"}),  # Add a horizontal divider
+            html.H4("Quasi Monte Carlo KIKO Option", className="card-title"),
+            dbc.Row([
+            dbc.Col([
+                dbc.Label("Spot Price (S)"),
+                dbc.Input(id='kiko-spot', type='number', value=100),
+            ], md=3),
+            dbc.Col([
+                dbc.Label("Volatility (σ)"),
+                dbc.Input(id='kiko-vol', type='number', value=0.2),
+            ], md=3),
+            dbc.Col([
+                dbc.Label("Risk-Free Rate (r)"),
+                dbc.Input(id='kiko-rate', type='number', value=0.05),
+            ], md=3),
+            dbc.Col([
+                dbc.Label("Time to Maturity (T)"),
+                dbc.Input(id='kiko-time', type='number', value=1),
+            ], md=3),
+            ], className="mb-3"),
+            dbc.Row([
+            dbc.Col([
+                dbc.Label("Strike Price (K)"),
+                dbc.Input(id='kiko-strike', type='number', value=100),
+            ], md=3),
+            dbc.Col([
+                dbc.Label("Lower Barrier (L)"),
+                dbc.Input(id='kiko-lower', type='number', value=90),
+            ], md=3),
+            dbc.Col([
+                dbc.Label("Upper Barrier (U)"),
+                dbc.Input(id='kiko-upper', type='number', value=110),
+            ], md=3),
+            dbc.Col([
+                dbc.Label("Number of Observations (n)"),
+                dbc.Input(id='kiko-obs', type='number', value=252),
+            ], md=3),
+            ]),
+            dbc.Row([
+            dbc.Col([
+                dbc.Label("Cash Rebate (R)"),
+                dbc.Input(id='kiko-rebate', type='number', value=0),
+            ], md=3),
+            dbc.Col([
+                dbc.Label("Number of Simulations (M)"),
+                dbc.Input(id='kiko-simulations', type='number', value=100000),
+            ], md=3),
+            dbc.Col([
+                dbc.Button("Calculate", id='kiko-calculate', color="primary", className="mt-4"),
+            ], md=3),
+            ]),
+            html.Hr(),
+            dbc.Row([
+            dbc.Col([
+                html.H5("Option Price:"),
+                html.Div(id='kiko-price', className="h4 text-success mb-3"),
+                html.H5("Option Delta:"),
+                html.Div(id='kiko-delta', className="h4 text-info")
+            ], className="text-center")
+            ]),
+            html.Hr(style={"borderTop": "2px solid #dee2e6"}),  # Add a horizontal divider
                 html.Div([
                 html.P(
                     "The Quasi Monte Carlo (QMC) method is an advanced numerical technique used to estimate "
@@ -770,33 +780,21 @@ app.layout = dbc.Container([
             ], className="mt-4")
         ], label="News"),
         
-        # Tab 10: Contact Us
+         # Tab 10: Contact Us
         dbc.Tab([
             dbc.Card([
                 dbc.CardBody([
                     html.H4("Contact Us", className="card-title"),
                     html.P("For any questions or support, please reach out to our team:"),
                     html.Ul([
-                        html.Li("Email: support@optionpricer.com"),
-                        html.Li("Phone: +1 (555) 123-4567"),
-                        html.Li("Address: 123 Finance Street, New York, NY 10001")
+                        html.Li("Email: u303638335@connect.hku.hk"),
+                        html.Li("Name: Balaji Varun Aditya"),
+                        html.Li("SID: 3036383355")
                     ]),
-                    html.Hr(),
-                    html.H5("Send us a message:"),
-                    dbc.Form([
-                        dbc.Row([
-                            dbc.Col([
-                                dbc.Label("Your Name"),
-                                dbc.Input(type="text", placeholder="Enter your name"),
-                            ], md=6),
-                            dbc.Col([
-                                dbc.Label("Your Email"),
-                                dbc.Input(type="email", placeholder="Enter your email"),
-                            ], md=6),
-                        ], className="mb-3"),
-                        dbc.Label("Message"),
-                        dbc.Textarea(placeholder="Your message here...", rows=5),
-                        dbc.Button("Submit", color="primary", className="mt-3"),
+                    html.Ul([
+                        html.Li("Email: u303638335@connect.hku.hk"),
+                        html.Li("Name: Sai Navyanth Vobillisetty"),
+                        html.Li("SID: ")
                     ])
                 ])
             ], className="mt-4")
@@ -963,12 +961,30 @@ def calculate_mc_aa(n_clicks, spot, vol, rate, time, strike, obs, paths, option_
     if n_clicks is None:
         return "", ""
     
-    # Here you would call your backend API
-    # For now, just return placeholders
-    price = 9.85  # Replace with actual API call
-    ci_low = 9.72
-    ci_high = 9.98
-    
+    try:
+
+        control_variate = True if cv == 'yes' else False
+
+        pricer = AsianOptionPricer(
+            S=spot,
+            k=strike,
+            T=time,
+            r=rate,
+            sigma=vol,
+            N=obs,
+            M=paths,
+            option_type=option_type,
+            control_variate=control_variate
+        )
+
+        results = pricer.monte_carlo_pricing()
+        price = float(results['cv_estimate'])
+        ci_low, ci_high = map(float, results['cv_ci'])
+
+    except Exception as e:
+        return f"Error: {str(e)}", ""
+
+    return f"${price:.2f}", f"[${ci_low:.2f}, ${ci_high:.2f}]"
     return f"${price:.2f}", f"[${ci_low:.2f}, ${ci_high:.2f}]"
 
 # Monte Carlo Arithmetic Basket Callback
@@ -992,11 +1008,29 @@ def calculate_mc_ab(n_clicks, s1, s2, vol1, vol2, rate, time, strike, correlatio
     if n_clicks is None:
         return "", ""
     
-    # Here you would call your backend API
-    # For now, just return placeholders
-    price = 13.20  # Replace with actual API call
-    ci_low = 13.05
-    ci_high = 13.35
+    try:
+        use_control_variate = True if cv == 'yes' else False
+
+        pricer = BasketOptionPricer(
+            S1=s1,
+            S2=s2,
+            K=strike,
+            T=time,
+            r=rate,
+            sigma1=vol1,
+            sigma2=vol2,
+            rho=correlation,
+            M=paths,
+            option_type=option_type,
+            use_control_variate=use_control_variate
+        )
+
+        results = pricer.monte_carlo_pricing()
+        price = float(results['cv_estimate'])
+        ci_low, ci_high = map(float, results['cv_ci'])
+
+    except Exception as e:
+        return f"Error: {str(e)}", ""
     
     return f"${price:.2f}", f"[${ci_low:.2f}, ${ci_high:.2f}]"
 
@@ -1013,16 +1047,33 @@ def calculate_mc_ab(n_clicks, s1, s2, vol1, vol2, rate, time, strike, correlatio
      State('kiko-lower', 'value'),
      State('kiko-upper', 'value'),
      State('kiko-obs', 'value'),
-     State('kiko-rebate', 'value')]
+     State('kiko-rebate', 'value'),
+     State('kiko-simulations', 'value')]
 )
-def calculate_kiko(n_clicks, spot, vol, rate, time, strike, lower, upper, obs, rebate):
+def calculate_kiko(n_clicks, spot, vol, rate, time, strike, lower, upper, obs, rebate, simulations):
     if n_clicks is None:
         return "", ""
     
-    # Here you would call your backend API
-    # For now, just return placeholders
-    price = 5.60  # Replace with actual API call
-    delta = 0.45
+    try:
+        pricer = KIKOOptionPricerQMC(
+            S=spot,
+            K=strike,
+            T=time,
+            r=rate,
+            sigma=vol,
+            L=lower,
+            U=upper,
+            N=obs,
+            M=simulations,
+            option_type='put',
+            rebate=rebate
+        )
+
+        results = pricer.monte_carlo_pricing()
+        price = float(results['price'])
+        delta = float(results['delta'])
+    except Exception as e:
+        return f"Error: {str(e)}", ""
     
     return f"${price:.2f}", f"{delta:.4f}"
 
@@ -1057,8 +1108,6 @@ def calculate_bt(n_clicks, spot, vol, rate, time, strike, steps, option_type):
         )
         
         # Log output values
-        print(f"Calculated Price: {price}")
-        
         return f"${price:.2f}"
         
     except Exception as e:
@@ -1075,20 +1124,24 @@ def get_news(n_clicks, symbol):
     if n_clicks is None:
         return ""
     
-    # Here you would call a news API
-    # For now, just return placeholder news items
-    news_items = [
-        {"title": f"{symbol} reports strong Q3 earnings", "date": "2023-11-15", "source": "Financial Times"},
-        {"title": f"Analysts raise price target for {symbol}", "date": "2023-11-10", "source": "Bloomberg"},
-        {"title": f"{symbol} announces new product line", "date": "2023-11-05", "source": "Wall Street Journal"}
-    ]
-    
-    return dbc.ListGroup([
-        dbc.ListGroupItem([
-            html.H5(item["title"]),
-            html.Small(f"{item['source']} - {item['date']}")
-        ]) for item in news_items
-    ])
+    if not symbol:
+        return "Please enter a stock symbol."
+
+    try:
+        ticker = yf.Ticker(symbol)
+        news_items = ticker.news
+
+        if not news_items:
+            return "No news available for this stock."
+
+        return dbc.ListGroup([
+            dbc.ListGroupItem([
+                html.H5(item.get("title", "No Title")),
+                html.Small(f"{item.get('publisher', 'Unknown Source')} - {item.get('providerPublishTime', 'Unknown Date')}")
+            ]) for item in news_items
+        ])
+    except Exception as e:
+        return f"Error fetching news: {str(e)}"
 
 if __name__ == '__main__':
     app.run(debug=True)

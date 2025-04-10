@@ -1,3 +1,9 @@
+"""
+Author: Sai Navyanth
+SID: 
+"""
+
+
 import numpy as np
 
 def american_option_pricing(S0, K, r, T, sigma, N, option_type):

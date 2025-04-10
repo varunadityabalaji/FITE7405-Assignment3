@@ -122,8 +122,8 @@ class BasketOptionPricer:
                     mean_price + 1.96 * std_price / np.sqrt(self.M)
                 ]
                 return {
-                    'plain_mc_estimate': str(mean_price),
-                    'plain_mc_ci': [str(conf_interval[0]), str(conf_interval[1])],
+                    'cv_estimate': str(mean_price),
+                    'cv_ci': [str(conf_interval[0]), str(conf_interval[1])],
                 }
 
             # Control variate logic

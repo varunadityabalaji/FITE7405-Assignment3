@@ -34,11 +34,11 @@ def geometric_asian_option_price(S0, sigma, r, T, K, n, option_type):
 if __name__ == "__main__":
     # Example parameters
     S0 = 100  # Initial stock price
-    sigma = 0.2  # Volatility
+    sigma = 0.3  # Volatility
     r = 0.05  # Risk-free interest rate
     T = 1  # Time to maturity (in years)
     K = 100  # Strike price
-    n = 12  # Number of observation times
+    n = 50  # Number of observation times
     option_type = 'call'  # Option type ('call' or 'put')
 
     # Calculate the geometric Asian option price

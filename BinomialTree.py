@@ -58,3 +58,17 @@ def american_option_pricing(S0, K, r, T, sigma, N, option_type):
 
     # Return the price of the option
     return option_prices[0, 0]
+
+if __name__ == "__main__":
+    # Example parameters
+    S0 = 100  # Spot price
+    K = 100   # Strike price
+    r = 0.05  # Risk-free interest rate
+    T = 1     # Time to maturity (in years)
+    sigma = 0.2  # Volatility
+    N = 100   # Number of steps in the binomial tree
+    option_type = 'call'  # Option type ('call' or 'put')
+
+    # Calculate the price of the American option
+    price = american_option_pricing(S0, K, r, T, sigma, N, option_type)
+    print(f"The price of the American {option_type} option is: {price:.2f}")

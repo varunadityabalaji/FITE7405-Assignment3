@@ -759,26 +759,32 @@ app.layout = dbc.Container([
         # Tab 9: News
         dbc.Tab([
             dbc.Card([
-                dbc.CardBody([
-                    html.H4("Stock News", className="card-title"),
-                    dbc.Row([
-                        dbc.Col([
-                            dbc.Label("Stock Symbol"),
-                            dbc.Input(id='news-symbol', type='text', value='AAPL'),
-                        ], md=6),
-                        dbc.Col([
-                            dbc.Button("Get News", id='news-get', color="primary", className="mt-4"),
-                        ], md=6),
-                    ]),
-                    html.Hr(),
-                    dbc.Row([
-                        dbc.Col([
-                            html.Div(id='news-results')
-                        ])
-                    ])
+            dbc.CardBody([
+                html.H4("Stock Chart", className="card-title"),
+                dbc.Row([
+                dbc.Col([
+                    dbc.Label("Enter Stock Symbol To Get a 3 Month Chart"),
+                    dbc.Input(id='news-symbol', type='text', value='AAPL'),
+                ], md=6),
+                dbc.Col([
+                    dbc.Button("Get Chart", id='news-get', color="primary", className="mt-4"),
+                ], md=6),
+                ]),
+                html.Hr(),
+                dbc.Row([
+                dbc.Col([
+                    html.Div(id='news-results')
                 ])
+                ]),
+                html.Hr(),
+                dbc.Row([
+                dbc.Col([
+                    dcc.Graph(id='news-graph')
+                ], width=12)
+                ])
+            ])
             ], className="mt-4")
-        ], label="News"),
+        ], label="Stock Chart"),
         
          # Tab 10: Contact Us
         dbc.Tab([
@@ -1116,32 +1122,47 @@ def calculate_bt(n_clicks, spot, vol, rate, time, strike, steps, option_type):
 
 # News Callback
 @callback(
-    Output('news-results', 'children'),
+    [Output('news-results', 'children'),
+     Output('news-graph', 'figure')],
     Input('news-get', 'n_clicks'),
     State('news-symbol', 'value')
 )
 def get_news(n_clicks, symbol):
     if n_clicks is None:
-        return ""
+        return "", go.Figure()
     
     if not symbol:
-        return "Please enter a stock symbol."
+        return "Please enter a stock symbol.", go.Figure()
 
     try:
-        ticker = yf.Ticker(symbol)
-        news_items = ticker.news
+        # Fetch stock data using yfinance
+        stock = yf.Ticker(symbol)
+        period = "3mo"  # Example: Last 3 months
+        interval = "1d"  # Example: Daily interval
+        data = stock.history(period=period, interval=interval)
 
-        if not news_items:
-            return "No news available for this stock."
+        if data.empty:
+            return "No data available for this stock.", go.Figure()
 
-        return dbc.ListGroup([
-            dbc.ListGroupItem([
-                html.H5(item.get("title", "No Title")),
-                html.Small(f"{item.get('publisher', 'Unknown Source')} - {item.get('providerPublishTime', 'Unknown Date')}")
-            ]) for item in news_items
-        ])
+        # Get the latest price
+        latest_price = data['Close'][-1]
+        print(f"Latest stock price for {symbol}: ${latest_price:.2f}")
+
+        # Create a graph of historical closing prices
+        fig = go.Figure()
+        fig.add_trace(go.Scatter(x=data.index, y=data['Close'], mode='lines', name='Close Price'))
+        fig.update_layout(
+            title=f"Stock Prices for {symbol} ({period})",
+            xaxis_title="Date",
+            yaxis_title="Price (USD)",
+            template="plotly_white"
+        )
+
+        return html.Div([
+            html.H5(f"Latest Stock Price: ${latest_price:.2f}", className="text-primary")
+        ]), fig
     except Exception as e:
-        return f"Error fetching news: {str(e)}"
+        return f"Error fetching stock data: {str(e)}", go.Figure()
 
 if __name__ == '__main__':
     app.run(debug=True)

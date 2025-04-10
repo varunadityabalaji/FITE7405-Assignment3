@@ -7,6 +7,7 @@ import numpy as np
 from scipy.stats import norm
 from typing import List, Tuple, Dict
 
+
 class AsianOptionPricer:
     """
     AsianOptionPricer is a class for pricing Asian options using Monte Carlo simulations 
@@ -89,7 +90,7 @@ class AsianOptionPricer:
 
     def simulate_paths(self) -> np.ndarray:
         try:
-            np.random.seed(42)  # Set the seed for reproducibility
+            np.random.seed(5)  # Set the seed for reproducibility
             all_paths = np.zeros((self.M, self.N))  # rows is simulations, columns is time steps
             for i in range(self.M):
                 path = [self.S]
@@ -157,7 +158,5 @@ class AsianOptionPricer:
             }
 
 if __name__ == "__main__":
-    pricer = AsianOptionPricer(S = 100, k = 100, sigma = 0.2, r = 0.05, T = 1, N=50, M=100000, option_type='put',control_variate=True)
-    results = pricer.monte_carlo_pricing()
-    for key, value in results.items():
-        print(f"{key}: {value}")
+    pricer = AsianOptionPricer(S=100, k=100, T=3, r=0.05, sigma=0.3, N=50, M=100000, option_type='call', control_variate=False)
+    print(pricer.monte_carlo_pricing())

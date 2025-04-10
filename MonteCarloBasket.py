@@ -70,6 +70,8 @@ class BasketOptionPricer:
         
     def simulate_paths(self) -> Tuple[np.ndarray, np.ndarray]:
         try:
+            np.random.seed(95)  # For reproducibility
+            
             #single timestep
             dt = self.T  
             
@@ -88,16 +90,24 @@ class BasketOptionPricer:
     
     def geometric_basket_price(self) -> float:
         try:
-            sigma_b = np.sqrt((self.sigma1**2 + self.sigma2**2 + 2 * self.rho * self.sigma1 * self.sigma2) / 4 )
-            mu_b = (np.log(self.S1 * self.S2) / 2 + (self.r - 0.5 * (self.sigma1**2 + self.sigma2**2) / 2 + 0.5 * sigma_b**2) * self.T)
+            sigma_avg = np.sqrt(self.sigma1**2 + self.sigma2**2 + 2*(self.sigma1*self.sigma2)*self.rho)/2
+            df = np.exp(-self.r * self.T)
 
-            d1 = (np.log(np.exp(mu_b) / self.K) + (sigma_b**2) * self.T) / (sigma_b * np.sqrt(self.T))
-            d2 = d1 - sigma_b * np.sqrt(self.T)
+            # Calculate the geometric average of the initial prices
+            B = np.sqrt(self.S1 * self.S2)
 
-            if self.option_type == "call":
-                price = np.exp(-self.r * self.T) * (np.exp(mu_b) * norm.cdf(d1) - self.K * norm.cdf(d2))
-            else:
-                price = np.exp(-self.r * self.T) * (self.K * norm.cdf(-d2) - np.exp(mu_b) * norm.cdf(-d1))
+        # calculate the average drift
+            mew = self.r - 0.25*(self.sigma1**2 + self.sigma2**2) + 0.5*sigma_avg**2
+
+            # Calculate the d1 and d2 terms
+            d1 = (np.log(B / self.K) + (mew + 0.5 * sigma_avg**2) * self.T) / (sigma_avg * np.sqrt(self.T))
+            d2 = d1 - sigma_avg * np.sqrt(self.T)
+
+            # Calculate the option price based on the type
+            if self.option_type == 'call':
+                price = df * (B * np.exp(mew * self.T) * norm.cdf(d1) - self.K * norm.cdf(d2))
+            elif self.option_type == 'put':
+                price = df * (self.K * norm.cdf(-d2) - B * np.exp(mew * self.T) * norm.cdf(-d1))
             return price
         except Exception as e:
             raise ValueError(f"Error in geometric_basket_price: {e}")
@@ -158,8 +168,8 @@ class BasketOptionPricer:
 if __name__ == "__main__":
     try:
         pricer = BasketOptionPricer(
-            S1=100, S2=100, K=100, T=1, r=0.05, 
-            sigma1=0.2, sigma2=0.2, rho=0.5, M=10000, option_type="put", use_control_variate=True
+            S1=100, S2=100, K=100, T=3, r=0.05, 
+            sigma1=0.3, sigma2=0.3, rho=0.5, M=100000, option_type="put", use_control_variate=True
         )
         print(pricer)
         print("Monte Carlo Pricing:", pricer.monte_carlo_pricing())

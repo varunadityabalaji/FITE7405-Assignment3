@@ -34,13 +34,13 @@ class KIKOOptionPricerQMC:
                 f"L={self.L}, U={self.U}, M={self.M}, N={self.N}, option_type='{self.option_type}', rebate={self.rebate}, seed={self.seed})")
 
     def simulate_paths(self, S0: float, Z: npt.NDArray[np.float64]) -> npt.NDArray[np.float64]:
-        paths = np.zeros((self.M, self.N))
+        paths = np.zeros((self.M, self.N + 1)) 
         paths[:, 0] = S0
-        for t in range(1, self.N):
+        for t in range(1, self.N + 1): 
             drift = (self.r - 0.5 * self.sigma ** 2) * self.dt
-            diffusion = self.sigma * np.sqrt(self.dt) * Z[:, t]
+            diffusion = self.sigma * np.sqrt(self.dt) * Z[:, t-1] 
             paths[:, t] = paths[:, t - 1] * np.exp(drift + diffusion)
-        return paths
+        return paths[:, 1:]  
 
     def get_payoffs(self, paths: npt.NDArray[np.float64]) -> npt.NDArray[np.float64]:
         payoffs = []
@@ -52,22 +52,24 @@ class KIKOOptionPricerQMC:
             knocked_in = min_price <= self.L
 
             if knocked_out:
-                payoff = self.rebate
+                knock_out_indices = np.where(path >= self.U)[0]
+                if knock_out_indices.size > 0:
+                    knock_out_time = knock_out_indices[0] + 1  # 1-based index
+                    discount_factor = np.exp(-self.r * knock_out_time * self.dt)
+                    payoff = self.rebate * discount_factor
             elif not knocked_in:
-                payoff = 0
+                payoff = 0  
             else:
                 if self.option_type == 'put':
                     payoff = max(self.K - path[-1], 0)
                 elif self.option_type == 'call':
                     payoff = max(path[-1] - self.K, 0)
+                discount_factor = np.exp(-self.r * self.T)
+                payoff *= discount_factor
             payoffs.append(payoff)
         return np.array(payoffs)
 
-    def delta(self, h: float = 0.01) -> float:
-        sobol = qmc.Sobol(d=self.N, scramble=True, seed=self.seed)
-        U = sobol.random(n=self.M)
-        Z = norm.ppf(U)
-
+    def delta(self, Z: npt.NDArray[np.float64], h: float = 0.01) -> float:
         paths_up = self.simulate_paths(self.S + h, Z)
         payoffs_up = self.get_payoffs(paths_up)
         EV_up = np.mean(payoffs_up)
@@ -87,11 +89,10 @@ class KIKOOptionPricerQMC:
         paths = self.simulate_paths(self.S, Z)
         payoffs = self.get_payoffs(paths)
         
-        discounted_payoffs = np.exp(-self.r * self.T) * payoffs
-        price = np.mean(discounted_payoffs)
-        std_error = np.std(discounted_payoffs) / np.sqrt(self.M)
+        price = np.mean(payoffs)
+        std_error = np.std(payoffs) / np.sqrt(self.M)
 
-        delta = self.delta()
+        delta = self.delta(Z)
 
         return {
             "price": f"{price:.4f}",

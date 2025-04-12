@@ -165,13 +165,3 @@ class BasketOptionPricer:
         except Exception as e:
             raise ValueError(f"Error in Monte Carlo pricing: {e}")
 
-if __name__ == "__main__":
-    try:
-        pricer = BasketOptionPricer(
-            S1=100, S2=100, K=100, T=3, r=0.05, 
-            sigma1=0.3, sigma2=0.3, rho=0.5, M=100000, option_type="put", use_control_variate=True
-        )
-        print(pricer)
-        print("Monte Carlo Pricing:", pricer.monte_carlo_pricing())
-    except Exception as e:
-        print(f"Error in main execution: {e}")

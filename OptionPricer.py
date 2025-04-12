@@ -574,60 +574,62 @@ app.layout = dbc.Container([
             html.H4("Quasi Monte Carlo KIKO Option", className="card-title"),
             dbc.Row([
             dbc.Col([
-                dbc.Label("Spot Price (S)"),
-                dbc.Input(id='kiko-spot', type='number', value=100),
+            dbc.Label("Spot Price (S)"),
+            dbc.Input(id='kiko-spot', type='number', value=100),
             ], md=3),
             dbc.Col([
-                dbc.Label("Volatility (σ)"),
-                dbc.Input(id='kiko-vol', type='number', value=0.2),
+            dbc.Label("Volatility (σ)"),
+            dbc.Input(id='kiko-vol', type='number', value=0.2),
             ], md=3),
             dbc.Col([
-                dbc.Label("Risk-Free Rate (r)"),
-                dbc.Input(id='kiko-rate', type='number', value=0.05),
+            dbc.Label("Risk-Free Rate (r)"),
+            dbc.Input(id='kiko-rate', type='number', value=0.05),
             ], md=3),
             dbc.Col([
-                dbc.Label("Time to Maturity (T)"),
-                dbc.Input(id='kiko-time', type='number', value=1),
+            dbc.Label("Time to Maturity (T)"),
+            dbc.Input(id='kiko-time', type='number', value=1),
             ], md=3),
             ], className="mb-3"),
             dbc.Row([
             dbc.Col([
-                dbc.Label("Strike Price (K)"),
-                dbc.Input(id='kiko-strike', type='number', value=100),
+            dbc.Label("Strike Price (K)"),
+            dbc.Input(id='kiko-strike', type='number', value=100),
             ], md=3),
             dbc.Col([
-                dbc.Label("Lower Barrier (L)"),
-                dbc.Input(id='kiko-lower', type='number', value=90),
+            dbc.Label("Lower Barrier (L)"),
+            dbc.Input(id='kiko-lower', type='number', value=90),
             ], md=3),
             dbc.Col([
-                dbc.Label("Upper Barrier (U)"),
-                dbc.Input(id='kiko-upper', type='number', value=110),
+            dbc.Label("Upper Barrier (U)"),
+            dbc.Input(id='kiko-upper', type='number', value=110),
             ], md=3),
             dbc.Col([
-                dbc.Label("Number of Observations (n)"),
-                dbc.Input(id='kiko-obs', type='number', value=252),
+            dbc.Label("Number of Observations (n)"),
+            dbc.Input(id='kiko-obs', type='number', value=252),
             ], md=3),
             ]),
             dbc.Row([
             dbc.Col([
-                dbc.Label("Cash Rebate (R)"),
-                dbc.Input(id='kiko-rebate', type='number', value=0),
+            dbc.Label("Cash Rebate (R)"),
+            dbc.Input(id='kiko-rebate', type='number', value=0),
             ], md=3),
             dbc.Col([
-                dbc.Label("Number of Simulations (M)"),
-                dbc.Input(id='kiko-simulations', type='number', value=100000),
+            dbc.Label("Number of Simulations (M)"),
+            dbc.Input(id='kiko-simulations', type='number', value=100000),
             ], md=3),
             dbc.Col([
-                dbc.Button("Calculate", id='kiko-calculate', color="primary", className="mt-4"),
+            dbc.Button("Calculate", id='kiko-calculate', color="primary", className="mt-4"),
             ], md=3),
             ]),
             html.Hr(),
             dbc.Row([
             dbc.Col([
-                html.H5("Option Price:"),
-                html.Div(id='kiko-price', className="h4 text-success mb-3"),
-                html.H5("Option Delta:"),
-                html.Div(id='kiko-delta', className="h4 text-info")
+            html.H5("Option Price:"),
+            html.Div(id='kiko-price', className="h4 text-success mb-3"),
+            html.H5("Option Delta:"),
+            html.Div(id='kiko-delta', className="h4 text-info"),
+            html.H5("95% Confidence Interval:"),
+            html.Div(id='kiko-ci', className="h4 text-warning")
             ], className="text-center")
             ]),
             html.Hr(style={"borderTop": "2px solid #dee2e6"}),  # Add a horizontal divider
@@ -1044,7 +1046,8 @@ def calculate_mc_ab(n_clicks, s1, s2, vol1, vol2, rate, time, strike, correlatio
 # KIKO Option Callback
 @callback(
     [Output('kiko-price', 'children'),
-     Output('kiko-delta', 'children')],
+     Output('kiko-delta', 'children'),
+     Output('kiko-ci', 'children')],
     Input('kiko-calculate', 'n_clicks'),
     [State('kiko-spot', 'value'),
      State('kiko-vol', 'value'),
@@ -1059,7 +1062,7 @@ def calculate_mc_ab(n_clicks, s1, s2, vol1, vol2, rate, time, strike, correlatio
 )
 def calculate_kiko(n_clicks, spot, vol, rate, time, strike, lower, upper, obs, rebate, simulations):
     if n_clicks is None:
-        return "", ""
+        return "", "", ""
     
     try:
         pricer = KIKOOptionPricerQMC(
@@ -1079,10 +1082,11 @@ def calculate_kiko(n_clicks, spot, vol, rate, time, strike, lower, upper, obs, r
         results = pricer.monte_carlo_pricing()
         price = float(results['price'])
         delta = float(results['delta'])
+        ci_low, ci_high = map(float, results['ci'])
     except Exception as e:
-        return f"Error: {str(e)}", ""
+        return f"Error: {str(e)}", "", ""
     
-    return f"${price:.2f}", f"{delta:.4f}"
+    return f"${price:.2f}", f"{delta:.4f}", f"[${ci_low:.2f}, ${ci_high:.2f}]"
 
 # Binomial Tree Callback
 @callback(

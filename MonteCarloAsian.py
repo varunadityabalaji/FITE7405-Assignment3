@@ -91,16 +91,16 @@ class AsianOptionPricer:
     def simulate_paths(self) -> np.ndarray:
         try:
             np.random.seed(5)  # Set the seed for reproducibility
-            all_paths = np.zeros((self.M, self.N))  # rows is simulations, columns is time steps
+            all_paths = np.zeros((self.M, self.N+1))  # rows is simulations, columns is time steps
             for i in range(self.M):
                 path = [self.S]
-                for j in range(1, self.N):
+                for j in range(1, self.N+1):
                     drift = (self.r - 0.5 * self.sigma**2) * self.dt
                     diffusion = self.sigma * np.sqrt(self.dt) * np.random.randn()
                     next_price = path[-1] * np.exp(drift + diffusion)
                     path.append(next_price)
                 all_paths[i] = path
-            return all_paths
+            return all_paths[:, 1:]  # Exclude the initial price
         except Exception as e:
             raise RuntimeError(f"Error in simulate_paths: {e}")
 

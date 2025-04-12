@@ -1,6 +1,6 @@
 """
 Author: Sai Navyanth
-SID: 
+SID: 3036384139
 """
 
 import numpy as np
@@ -31,16 +31,3 @@ def geometric_asian_option_price(S0, sigma, r, T, K, n, option_type):
     else:
         raise ValueError("Invalid option type.")
     
-if __name__ == "__main__":
-    # Example parameters
-    S0 = 100  # Initial stock price
-    sigma = 0.3  # Volatility
-    r = 0.05  # Risk-free interest rate
-    T = 1  # Time to maturity (in years)
-    K = 100  # Strike price
-    n = 50  # Number of observation times
-    option_type = 'call'  # Option type ('call' or 'put')
-
-    # Calculate the geometric Asian option price
-    price = geometric_asian_option_price(S0, sigma, r, T, K, n, option_type)
-    print(f"The price of the geometric Asian {option_type} option is: {price:.2f}")

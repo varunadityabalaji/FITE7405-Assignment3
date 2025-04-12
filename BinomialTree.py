@@ -1,8 +1,7 @@
 """
 Author: Sai Navyanth
-SID: 
+SID: 3036384139
 """
-
 
 import numpy as np
 
@@ -71,4 +70,3 @@ def american_option_pricing(S0, K, r, T, sigma, N, option_type):
     return option_prices[0, 0], stock_prices, option_prices
 
 
-print(american_option_pricing(50, 40, 0.1, 2, 0.4, 200, 'put'))

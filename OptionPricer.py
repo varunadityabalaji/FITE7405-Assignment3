@@ -18,6 +18,7 @@ import plotly.graph_objects as go
 
 
 
+
 # Initialize the app
 app = dash.Dash(__name__, external_stylesheets=[dbc.themes.LUX])
 app.title = "Option Pricer"
@@ -991,7 +992,7 @@ def calculate_mc_aa(n_clicks, spot, vol, rate, time, strike, obs, paths, option_
         return f"Error: {str(e)}", ""
 
     return f"${price:.2f}", f"[${ci_low:.2f}, ${ci_high:.2f}]"
-    return f"${price:.2f}", f"[${ci_low:.2f}, ${ci_high:.2f}]"
+    
 
 # Monte Carlo Arithmetic Basket Callback
 @callback(
@@ -1100,9 +1101,6 @@ def calculate_bt(n_clicks, spot, vol, rate, time, strike, steps, option_type):
         return ""
     
     try:
-        # Log input values
-        print(f"Inputs - Spot: {spot}, Vol: {vol}, Rate: {rate}, Time: {time}, Strike: {strike}, Steps: {steps}, Type: {option_type}")
-        
         price, _, _ = american_option_pricing(
             S0=spot,
             K=strike,
@@ -1117,7 +1115,6 @@ def calculate_bt(n_clicks, spot, vol, rate, time, strike, steps, option_type):
         return f"${price:.2f}"
         
     except Exception as e:
-        print(f"Error: {str(e)}")
         return f"Error: {str(e)}"
 
 # News Callback
@@ -1146,7 +1143,7 @@ def get_news(n_clicks, symbol):
 
         # Get the latest price
         latest_price = data['Close'][-1]
-        print(f"Latest stock price for {symbol}: ${latest_price:.2f}")
+
 
         # Create a graph of historical closing prices
         fig = go.Figure()
@@ -1165,4 +1162,5 @@ def get_news(n_clicks, symbol):
         return f"Error fetching stock data: {str(e)}", go.Figure()
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run()
+

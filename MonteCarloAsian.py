@@ -156,7 +156,27 @@ class AsianOptionPricer:
                 'cv_estimate': str(arith_mean),
                 'cv_ci': [str(conf[0]), str(conf[1])]
             }
-
 if __name__ == "__main__":
-    pricer = AsianOptionPricer(S=100, k=100, T=3, r=0.05, sigma=0.3, N=50, M=100000, option_type='call', control_variate=False)
-    print(pricer.monte_carlo_pricing())
+    # Parameters
+    r = 0.05
+    T = 3
+    M = 100000  # Number of Monte Carlo simulations
+
+    # Test cases
+    test_cases = [
+        (100, 0.3, 100, 50, "call"),
+        (100, 0.3, 100, 100, "call"),
+        (100, 0.4, 100, 50, "call"),
+        (100, 0.3, 100, 100, "put"),
+        (100, 0.4, 100, 50, "put"),
+        (100, 0.3, 100, 50, "put"),
+    ]
+
+    # Run test cases
+    for S, sigma, K, N, option_type in test_cases:
+        pricer = AsianOptionPricer(S=S, k=K, T=T, r=r, sigma=sigma, N=N, M=M, option_type=option_type)
+        result = pricer.monte_carlo_pricing()
+        print(f"Results for S={S}, sigma={sigma}, K={K}, N={N}, option_type={option_type}:")
+        print(f"  CV Estimate: {result['cv_estimate']}")
+        print(f"  CV Confidence Interval: {result['cv_ci']}")
+        print()

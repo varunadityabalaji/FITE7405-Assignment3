@@ -165,3 +165,31 @@ class BasketOptionPricer:
         except Exception as e:
             raise ValueError(f"Error in Monte Carlo pricing: {e}")
 
+if __name__ == "__main__":
+    test_cases = [
+        (100, 100, 100, 0.3, 0.3, 0.5, "call", 22.10),
+        (100, 100, 100, 0.3, 0.3, 0.9, "call", 25.88),
+        (100, 100, 100, 0.1, 0.3, 0.5, "call", 17.92),
+        (100, 100, 80, 0.3, 0.3, 0.5, "call", 32.54),
+        (100, 100, 120, 0.3, 0.3, 0.5, "call", 14.69),
+        (100, 100, 100, 0.5, 0.5, 0.5, "call", 28.45),
+        (100, 100, 100, 0.3, 0.3, 0.5, "put", 11.49),
+        (100, 100, 100, 0.3, 0.3, 0.9, "put", 12.62),
+        (100, 100, 100, 0.1, 0.3, 0.5, "put", 6.59),
+        (100, 100, 80, 0.3, 0.3, 0.5, "put", 4.71),
+        (100, 100, 120, 0.3, 0.3, 0.5, "put", 21.29),
+        (100, 100, 100, 0.5, 0.5, 0.5, "put", 23.47),
+    ]
+
+    r = 0.05
+    T = 3
+    M = 100000
+
+    for S1, S2, K, sigma1, sigma2, rho, option_type, closed_form_price in test_cases:
+        pricer = BasketOptionPricer(S1, S2, K, T, r, sigma1, sigma2, rho, M, option_type)
+        result = pricer.monte_carlo_pricing()
+        print(f"Test Case: S1={S1}, S2={S2}, K={K}, sigma1={sigma1}, sigma2={sigma2}, rho={rho}, option_type={option_type}")
+        print(f"Our Closed Form Price: {closed_form_price}")
+        print(f"Monte Carlo Estimate: {result['cv_estimate']}")
+        print(f"95% Confidence Interval: {result['cv_ci']}")
+        print("-" * 80)

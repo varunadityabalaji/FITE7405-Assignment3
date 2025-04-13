@@ -721,11 +721,6 @@ app.layout = dbc.Container([
                 ], className="text-center")
                 ]),
                 html.Hr(),
-                dbc.Row([
-                dbc.Col([
-                    dcc.Graph(id='bt-tree-plot')
-                ], width=12)
-                ]),
                 html.Hr(style={"borderTop": "2px solid #dee2e6"}),  # Add a horizontal divider
                 html.Div([
                 html.P(
@@ -803,7 +798,7 @@ app.layout = dbc.Container([
                     html.Ul([
                         html.Li("Email: u303638335@connect.hku.hk"),
                         html.Li("Name: Sai Navyanth Vobillisetty"),
-                        html.Li("SID: ")
+                        html.Li("SID: 3036384139")
                     ])
                 ])
             ], className="mt-4")
@@ -1138,8 +1133,8 @@ def get_news(n_clicks, symbol):
     try:
         # Fetch stock data using yfinance
         stock = yf.Ticker(symbol)
-        period = "3mo"  # Example: Last 3 months
-        interval = "1d"  # Example: Daily interval
+        period = "3mo"  
+        interval = "1d"  
         data = stock.history(period=period, interval=interval)
 
         if data.empty:

@@ -100,3 +100,46 @@ class KIKOOptionPricerQMC:
             "delta": f"{delta:.4f}"
         }
 
+if __name__ == "__main__":
+
+    # Example 1: Varying the volatility
+    print("Effect of Volatility:")
+    for sigma in [0.1, 0.2, 0.3, 0.4, 0.5]:
+        pricer = KIKOOptionPricerQMC(S=100, K=100, T=3, r=0.05, sigma=sigma, L=90, U=110, N=50, M=100000, option_type='put')
+        result = pricer.monte_carlo_pricing()
+        print(f"Volatility: {sigma}, Price: {result['price']}, Confidence Interval: {result['confidence_interval']}, Delta: {result['delta']}")
+
+    # Example 2: Varying the risk-free rate
+    print("\nEffect of Risk-Free Rate:")
+    for r in [0.01, 0.03, 0.05, 0.07, 0.1]:
+        pricer = KIKOOptionPricerQMC(S=100, K=100, T=3, r=r, sigma=0.3, L=90, U=110, N=50, M=100000, option_type='put')
+        result = pricer.monte_carlo_pricing()
+        print(f"Risk-Free Rate: {r}, Price: {result['price']}, Confidence Interval: {result['confidence_interval']}, Delta: {result['delta']}")
+
+    # Example 3: Varying the time to maturity
+    print("\nEffect of Time to Maturity:")
+    for T in [1, 2, 3, 4, 5]:
+        pricer = KIKOOptionPricerQMC(S=100, K=100, T=T, r=0.05, sigma=0.3, L=90, U=110, N=50, M=100000, option_type='put')
+        result = pricer.monte_carlo_pricing()
+        print(f"Time to Maturity: {T}, Price: {result['price']}, Confidence Interval: {result['confidence_interval']}, Delta: {result['delta']}")
+
+    # Example 4: Varying the number of time steps
+    print("\nEffect of Number of Time Steps:")
+    for N in [10, 20, 50, 100, 200]:
+        pricer = KIKOOptionPricerQMC(S=100, K=100, T=3, r=0.05, sigma=0.3, L=90, U=110, N=N, M=100000, option_type='put')
+        result = pricer.monte_carlo_pricing()
+        print(f"Number of Time Steps: {N}, Price: {result['price']}, Confidence Interval: {result['confidence_interval']}, Delta: {result['delta']}")
+
+    # Example 5: Varying the number of simulations
+    print("\nEffect of Number of Simulations:")
+    for M in [1000, 10000, 50000, 100000, 200000]:
+        pricer = KIKOOptionPricerQMC(S=100, K=100, T=3, r=0.05, sigma=0.3, L=90, U=110, N=50, M=M, option_type='put')
+        result = pricer.monte_carlo_pricing()
+        print(f"Number of Simulations: {M}, Price: {result['price']}, Confidence Interval: {result['confidence_interval']}, Delta: {result['delta']}")
+
+    # Example 6: Varying the strike price
+    print("\nEffect of Strike Price:")
+    for K in [80, 90, 100, 110, 120]:
+        pricer = KIKOOptionPricerQMC(S=100, K=K, T=3, r=0.05, sigma=0.3, L=90, U=110, N=50, M=100000, option_type='put')
+        result = pricer.monte_carlo_pricing()
+        print(f"Strike Price: {K}, Price: {result['price']}, Confidence Interval: {result['confidence_interval']}, Delta: {result['delta']}")

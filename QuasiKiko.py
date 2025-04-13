@@ -96,7 +96,7 @@ class KIKOOptionPricerQMC:
 
         return {
             "price": f"{price:.4f}",
-            "confidence_interval": (round(price - 1.96 * std_error, 4), round(price + 1.96 * std_error, 4)),
+            "ci": (round(price - 1.96 * std_error, 4), round(price + 1.96 * std_error, 4)),
             "delta": f"{delta:.4f}"
         }
 
